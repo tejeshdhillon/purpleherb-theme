@@ -1,10 +1,12 @@
 {%- comment -%}
-  Checkout runs through the store's Shopify cart, which Razorpay Magic Checkout picks up.
+  Checkout: if Theme settings > Checkout has a server address, Checkout and Buy now open Razorpay Magic Checkout
+  through that server (see server/README.md). If it is empty, they use Shopify's standard checkout button.
   Account icon: set "Account / login page URL" in Theme settings > Checkout & login.
   Left empty, the icon is hidden.
 {%- endcomment -%}
 <script>
   PH.integrations = {
+    checkoutApi: {{ settings.ph_checkout_api | default: '' | strip | json }},
     accountUrl: {{ settings.ph_account_url | default: '' | json }},
     account: function () {}
   };

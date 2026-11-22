@@ -501,3 +501,13 @@ body[data-page="home"] .ph-header .ph-ico { color: #FFFFFF; }
 body[data-page="home"] .ph-header .ph-ico:hover { background: rgba(255, 255, 255, .14); }
 body[data-page="home"] .ph-header .ph-count { background: #FFFFFF; color: #45346B; }
 body[data-page="home"] .ph-header .ph-nav a::after { background: #CFC3EE; }
+
+/* Checkout: waiting state and thank-you screen */
+body.ph-paying .pebble[name="checkout"],body.ph-paying [data-ph-buy]{opacity:.6;pointer-events:none}
+.ph-thanks{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(180deg,#45346B 0%,#3B2F61 55%,#F4F4F4 100%)}
+.ph-thanks__card{max-width:460px;width:100%;background:#fff;border-radius:28px;padding:40px 32px;text-align:center;box-shadow:0 30px 80px rgba(35,26,74,.35)}
+.ph-thanks__card h2{margin:6px 0 14px;font-size:30px;line-height:1.1;color:#231A4A}
+.ph-thanks__card p{color:#45346B;line-height:1.6;margin:0 0 14px}
+.ph-thanks__card .label{color:#5F4BB6}
+.ph-thanks__ref{font-size:13px;color:#8B78D4!important;letter-spacing:.04em}
+.ph-thanks__card .pebble{margin-top:10px}
