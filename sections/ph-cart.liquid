@@ -43,8 +43,8 @@ document.addEventListener("DOMContentLoaded", function () {
         '<p class="summary__row"><span>Items</span><span>' + cart.count() + '</span></p>' +
         (saved > 0 ? '<p class="summary__row" style="color:#4D7A3E"><span>You save</span><span>' + PH.inr(saved) + '</span></p>' : '') +
         '<p class="summary__row total"><span>Subtotal</span><span>' + PH.inr(t.sub) + '</span></p>' +
-        '<a class="pebble pebble--wide" href="' + cart.checkoutUrl() + '">Checkout securely</a>' +
-        '<p class="note">Shipping and taxes are calculated at checkout on purpleherb.in. Lab-tested · Traceable · Zero additives.</p>' +
+        '<form action="/cart" method="post" style="margin:0"><button class="pebble pebble--wide" type="submit" name="checkout">Checkout securely</button></form>' +
+        '<p class="note">Shipping is calculated at checkout. Lab-tested · Traceable · Zero additives.</p>' +
       '</aside></div>';
     }
     PH.decorate(box); PH.brandify(box);

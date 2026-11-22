@@ -252,18 +252,49 @@
   /* ------------------------------------------------------------------ *
    * 4. Basket — kept in this browser, checkout on Shopify
    * ------------------------------------------------------------------ */
-  var KEY = 'ph-cart-v1';
+  /* Basket = the store's own Shopify cart, so checkout apps (Razorpay Magic Checkout)
+     see the same items. The page starts from the cart Shopify printed (PH.initialCart),
+     updates instantly, then syncs each change in the background. */
   var cart = {
     items: [],
-    load: function () { try { this.items = JSON.parse(localStorage.getItem(KEY) || '[]').filter(function (i) { return PH.byVariant(i.id); }); } catch (e) { this.items = this.items || []; } },
-    save: function () { try { localStorage.setItem(KEY, JSON.stringify(this.items)); } catch (e) {} document.dispatchEvent(new CustomEvent('ph:cart')); },
-    add: function (id, qty) { id = Number(id); qty = Math.max(1, Number(qty) || 1); var it = this.items.find(function (i) { return i.id === id; }); if (it) it.qty = Math.min(20, it.qty + qty); else this.items.push({ id: id, qty: qty }); this.save(); },
-    set: function (id, qty) { id = Number(id); var it = this.items.find(function (i) { return i.id === id; }); if (!it) return; if (qty < 1) return this.remove(id); it.qty = Math.min(20, qty); this.save(); },
-    remove: function (id) { id = Number(id); this.items = this.items.filter(function (i) { return i.id !== id; }); this.save(); },
+    pending: 0,
+    _queue: Promise.resolve(),
+    load: function () {
+      this.items = (PH.initialCart || []).map(function (i) { return { id: Number(i.id), qty: Number(i.qty) }; })
+        .filter(function (i) { return PH.byVariant(i.id); });
+    },
+    save: function () { document.dispatchEvent(new CustomEvent('ph:cart')); },
+    _push: function (id) {
+      var self = this, it = this.items.find(function (i) { return i.id === id; });
+      var updates = {}; updates[id] = it ? it.qty : 0;
+      self.pending++;
+      this._queue = this._queue.then(function () {
+        return fetch('/cart/update.js', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ updates: updates }) })
+          .then(function (r) { if (!r.ok) throw r; return r.json(); })
+          .catch(function () { return fetch('/cart.js', { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }); })
+          .then(function (c) { self._from(c); })
+          .catch(function () {})
+          .then(function () { self.pending--; });
+      });
+      return this._queue;
+    },
+    _from: function (c) {
+      var next = (c.items || []).map(function (i) { return { id: i.variant_id, qty: i.quantity }; }).filter(function (i) { return PH.byVariant(i.id); });
+      var same = JSON.stringify(next) === JSON.stringify(this.items);
+      this.items = next;
+      if (!same) this.save();
+    },
+    refresh: function () { var self = this; return fetch('/cart.js', { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); }).then(function (c) { self._from(c); }).catch(function () {}); },
+    synced: function () { return this._queue; },
+    add: function (id, qty) { id = Number(id); qty = Math.max(1, Number(qty) || 1); var it = this.items.find(function (i) { return i.id === id; }); if (it) it.qty = Math.min(20, it.qty + qty); else this.items.push({ id: id, qty: qty }); this.save(); return this._push(id); },
+    set: function (id, qty) { id = Number(id); var it = this.items.find(function (i) { return i.id === id; }); if (!it) return; if (qty < 1) return this.remove(id); it.qty = Math.min(20, qty); this.save(); return this._push(id); },
+    remove: function (id) { id = Number(id); this.items = this.items.filter(function (i) { return i.id !== id; }); this.save(); return this._push(id); },
     count: function () { return this.items.reduce(function (s, i) { return s + i.qty; }, 0); },
     totals: function () { return this.items.reduce(function (t, i) { var m = PH.byVariant(i.id); t.sub += m.v.price * i.qty; t.compare += (m.v.compare || m.v.price) * i.qty; return t; }, { sub: 0, compare: 0 }); },
-    checkoutUrl: function () { return '#checkout'; }
+    checkoutUrl: function () { return '/checkout'; }
   };
+  // the back button can show a cached page: refresh from the store when that happens
+  window.addEventListener('pageshow', function (e) { if (e.persisted) cart.refresh(); });
   cart.load();
   PH.cart = cart;
   function paintBadge(bump) {
@@ -289,16 +320,33 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 4200);
   }
-  // Checkout, Buy now and Account are handed to the third-party service (snippets/ph-integrations.liquid)
+  /* Checkout and Buy now use Shopify's standard checkout button (form action=/cart, name=checkout),
+     the button checkout apps such as Razorpay Magic Checkout listen for. */
+  function goCheckout() {
+    var btn = document.getElementById('ph-checkout-btn');
+    if (btn) btn.click(); else window.location.href = '/checkout';
+  }
+  PH.goCheckout = goCheckout;
   document.addEventListener('click', function (e) {
-    var co = e.target.closest('a[href="#checkout"], [data-ph-buy]'), ac = e.target.closest('[data-ph-account]');
-    if (co) {
+    var buy = e.target.closest('[data-ph-buy]'), co = e.target.closest('[name="checkout"]'), ac = e.target.closest('[data-ph-account]');
+    if (buy) {
       e.preventDefault();
-      if (co.hasAttribute('data-ph-buy')) { var bm = PH.byVariant(co.getAttribute('data-ph-buy')); if (bm && bm.v.available === false) { soldOut(bm); return; } }
-      var items = co.hasAttribute('data-ph-buy') ? [{ id: Number(co.getAttribute('data-ph-buy')), qty: Number(co.getAttribute('data-qty') || 1) }] : cart.items.slice();
-      PH.integrations.checkout(items.map(function (i) { var m = PH.byVariant(i.id); return { variantId: i.id, quantity: i.qty, price: m.v.price, title: m.p.name + ' - ' + m.v.title, handle: m.p.shopHandle }; }), co);
+      var bm = PH.byVariant(buy.getAttribute('data-ph-buy'));
+      if (!bm) return;
+      if (bm.v.available === false) { soldOut(bm); return; }
+      var qty = Number(buy.getAttribute('data-qty') || 1);
+      buy.classList.add('added');
+      // Buy now = this item alone in the basket, then straight to checkout
+      var others = cart.items.filter(function (i) { return i.id !== bm.v.id; }).map(function (i) { return i.id; });
+      others.forEach(function (id) { cart.remove(id); });
+      var it = cart.items.find(function (i) { return i.id === bm.v.id; });
+      (it ? cart.set(bm.v.id, qty) : cart.add(bm.v.id, qty)).then(function () { buy.classList.remove('added'); goCheckout(); });
+    } else if (co && cart.pending > 0) {
+      // let the last basket change reach the store first
+      e.preventDefault(); e.stopImmediatePropagation();
+      cart.synced().then(function () { co.click(); });
     } else if (ac && !PH.integrations.accountUrl) { e.preventDefault(); PH.integrations.account(ac); }
-  });
+  }, true);
   function soldOut(m) {
     toast.innerHTML = '<p><strong>Sold out for now</strong>' + m.p.name + ' · ' + m.v.title + ' is out of stock. Ask us on <a class="twig" href="' + PH.social.whatsapp + '">WhatsApp</a> when it is back.</p>';
     toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 4200);
