@@ -1,0 +1,14 @@
+<main>
+  <section class="cart-hero"><div class="wrap settle"><p class="label">Journal</p><h1 class="script">{{ blog.title | downcase }}</h1></div></section>
+  <div class="wrap legal-content" style="padding-bottom:100px">
+    {%- paginate blog.articles by 12 -%}
+    {%- for a in blog.articles -%}<h2><a href="{{ a.url }}">{{ a.title }}</a></h2><p>{{ a.excerpt_or_content | strip_html | truncatewords: 40 }}</p>{%- endfor -%}
+    {%- if paginate.pages > 1 -%}{{ paginate | default_pagination }}{%- endif -%}
+    {%- endpaginate -%}
+  </div>
+</main>
+{% schema %}
+{
+  "name": "Blog"
+}
+{% endschema %}

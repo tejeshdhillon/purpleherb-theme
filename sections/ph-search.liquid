@@ -1,0 +1,16 @@
+<main>
+  <section class="cart-hero"><div class="wrap settle"><p class="label">Search</p><h1 class="script">find it</h1>
+  <form action="{{ routes.search_url }}" method="get" role="search" style="display:flex;gap:12px;max-width:520px;margin-top:24px">
+    <input type="search" name="q" value="{{ search.terms | escape }}" placeholder="Saffron, honey, shilajit…" style="flex:1;padding:14px 18px;border-radius:999px;border:1px solid var(--line,#ddd)">
+    <button class="pebble" type="submit">Search</button></form></div></section>
+  <div class="wrap" style="padding-bottom:100px">
+    {%- if search.performed -%}
+      <ul class="legal-content">{%- for r in search.results -%}<li><a href="{{ r.url }}">{{ r.title }}</a></li>{%- else -%}<li>No results for “{{ search.terms | escape }}”.</li>{%- endfor -%}</ul>
+    {%- endif -%}
+  </div>
+</main>
+{% schema %}
+{
+  "name": "Search"
+}
+{% endschema %}

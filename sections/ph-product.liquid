@@ -1,0 +1,25 @@
+{%- assign ph_known = 'kesar,superfood-2,sea-buckthorn-juice,himalayan-shilajit,sea-buckthorn-quad-omega-powder' | split: ',' -%}
+{%- if ph_known contains product.handle -%}
+<main id="product"><noscript><p style="padding:160px 24px">{{ product.title }} — please enable JavaScript to view this product.</p></noscript></main>
+{%- else -%}
+{%- comment -%} A product added in Shopify later, that the design does not know yet: a simple page in the brand style {%- endcomment -%}
+<main>
+  <section class="legal-hero"><div class="wrap">
+    <p class="label">The collection</p>
+    <h1 class="hd hd-l">{{ product.title }}</h1>
+    <p class="lede"><strong>{{ product.price | money }}</strong>{% if product.compare_at_price > product.price %} <s>{{ product.compare_at_price | money }}</s>{% endif %}</p>
+  </div></section>
+  <div class="wrap" style="display:grid;gap:48px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));padding-bottom:80px">
+    <div>{%- if product.featured_image -%}{{ product.featured_image | image_url: width: 1200 | image_tag: loading: 'eager', style: 'width:100%;height:auto;border-radius:24px' }}{%- endif -%}</div>
+    <div class="legal-content">{{ product.description }}
+      <p style="margin-top:28px"><a class="pebble" href="https://wa.me/919000016479?text={{ 'Hello purpleherb, I would like to order ' | append: product.title | url_encode }}">Order on WhatsApp</a></p>
+    </div>
+  </div>
+</main>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product page"
+}
+{% endschema %}

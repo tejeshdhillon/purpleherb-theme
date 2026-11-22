@@ -1,0 +1,10 @@
+{
+  "sections": {
+    "main": {
+      "type": "ph-return-policy"
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

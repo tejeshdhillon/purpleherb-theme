@@ -1,0 +1,4 @@
+{% layout none %}
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gift card — purpleherb</title>{{ 'style.css' | asset_url | stylesheet_tag }}</head>
+<body><main class="wrap" style="padding:80px 24px;text-align:center"><h1 class="script">a gift from the mountains</h1>
+<p class="lede">{{ gift_card.balance | money }}</p><p><code>{{ gift_card.code | format_code }}</code></p></main></body></html>

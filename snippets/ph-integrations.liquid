@@ -1,0 +1,39 @@
+{%- comment -%}
+  ============================================================
+  YOUR CHECKOUT + LOGIN SERVICE PLUGS IN HERE
+  ============================================================
+  The site keeps its own basket in the shopper's browser (Shopify's cart, login and
+  checkout are not used). Three things are handed to your third-party service:
+
+  1. checkout(items)  — called by "Checkout securely" (basket) and "Buy now" (product page).
+       items = [{ variantId, quantity, price, title, handle }, ...]   (price in rupees)
+  2. Account icon     — links to the "Account / login page URL" in
+       Online Store > Themes > Customize > Theme settings > Checkout & login.
+       Left empty, the icon is hidden.
+  3. PH.cart          — the basket itself if your service needs it:
+       PH.cart.items, PH.cart.count(), PH.cart.totals().sub, PH.cart.remove(id)
+
+  Paste your provider's script tag below, then replace the body of checkout().
+  Until then, checkout opens WhatsApp with the order filled in, so orders can still come in.
+{%- endcomment -%}
+
+{%- comment -%} Paste the provider's <script src="..."></script> here {%- endcomment -%}
+
+<script>
+  PH.integrations = {
+    accountUrl: {{ settings.ph_account_url | default: '' | json }},
+
+    checkout: function (items, button) {
+      if (!items.length) return;
+      // ---- replace from here with your provider's call, e.g. Provider.openCheckout(items) ----
+      var lines = items.map(function (i) { return i.quantity + ' x ' + i.title + ' (Rs. ' + i.price + ')'; });
+      var total = items.reduce(function (s, i) { return s + i.price * i.quantity; }, 0);
+      var msg = 'Hello purpleherb, I would like to order:\n' + lines.join('\n') + '\nTotal: Rs. ' + total;
+      window.location.href = (PH.social && PH.social.whatsapp || 'https://wa.me/919000016479') + '?text=' + encodeURIComponent(msg);
+      // ---- to here ----
+    },
+
+    account: function () {}
+  };
+</script>
+{%- if settings.ph_account_url == blank -%}<style>[data-ph-account]{display:none!important}</style>{%- endif -%}

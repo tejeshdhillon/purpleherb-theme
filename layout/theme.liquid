@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code | default: 'en' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{%- if template.name == 'index' -%}purpleherb — Nature's rarest superfoods{%- else -%}{{ page_title }} — purpleherb{%- endif -%}</title>
+<meta name="description" content="{{ page_description | default: "Nature's rarest superfoods, single origin and lab-tested — Kashmiri saffron, Kashmiri acacia honey, Ladakhi sea buckthorn and Himalayan shilajit, sourced directly from the communities who harvest them." | escape }}">
+<link rel="canonical" href="{{ canonical_url }}">
+<link rel="icon" href="{{ 'flower.png' | asset_url }}">
+<meta property="og:site_name" content="purpleherb">
+<meta property="og:title" content="{{ page_title | escape }}">
+<meta property="og:url" content="{{ canonical_url }}">
+{%- if product and product.featured_image -%}<meta property="og:image" content="https:{{ product.featured_image | image_url: width: 1200 }}">{%- endif -%}
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+{{ 'style.css' | asset_url | stylesheet_tag }}
+{{ content_for_header }}
+</head>
+{%- liquid
+  assign ph_page = 'other'
+  assign ph_pinned = true
+  case template.name
+    when 'index'
+      assign ph_page = 'home'
+      assign ph_pinned = false
+    when 'product'
+      assign ph_page = 'shop'
+    when 'collection', 'list-collections'
+      assign ph_page = 'shop'
+    when 'cart'
+      assign ph_page = 'cart'
+    when 'page'
+      if template.suffix contains 'policy' or template.suffix == 'terms-of-service'
+        assign ph_page = 'legal'
+      endif
+  endcase
+-%}
+<body data-page="{{ ph_page }}" data-root=""{% if template.name == 'product' %} data-handle="{{ product.handle }}"{% endif %}{% if ph_pinned %} data-pinned-logo{% endif %}>
+<header data-ph-header></header>
+{{ content_for_layout }}
+<footer data-ph-footer></footer>
+
+<script>
+  window.PH = window.PH || {};
+  PH.ASSETS = {{ 'flower.png' | asset_url | split: 'flower.png' | first | json }};
+  PH.asset = function (file) { return PH.ASSETS + file; };
+</script>
+{{ 'wordmark.js' | asset_url | script_tag }}
+{{ 'catalog.js' | asset_url | script_tag }}
+{%- render 'ph-live-data' -%}
+<script>
+  /* PH.live -> prices, availability; then point the product page at its design */
+  (function () {
+    var L = PH.liveRaw || {};
+    PH.live = L;
+    PH.products = PH.products.filter(function (p) {
+      var x = L[p.shopHandle];
+      if (!x || !x.variants || !x.variants.length) return false;
+      var titles = p.variants;
+      p.variants = x.variants.map(function (v, i) {
+        return { id: v.id, title: v.title === 'Default Title' ? ((titles[i] || titles[0] || {}).title || '') : v.title,
+                 price: v.price, compare: v.compare > v.price ? v.compare : 0, available: v.available };
+      });
+      return true;
+    });
+    var h = document.body.getAttribute('data-handle'), p = h && PH.byHandle(h);
+    if (p) document.body.setAttribute('data-product', p.slug);
+  })();
+</script>
+{%- render 'ph-integrations' -%}
+{{ 'site.js' | asset_url | script_tag }}
+{%- case template.name -%}
+  {%- when 'index' -%}{{ 'home.js' | asset_url | script_tag }}
+  {%- when 'product' -%}{{ 'product.js' | asset_url | script_tag }}
+{%- endcase -%}
+{%- if ph_page == 'legal' -%}{{ 'legal-toc.js' | asset_url | script_tag }}{%- endif -%}
+</body>
+</html>

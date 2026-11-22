@@ -1,0 +1,10 @@
+{
+  "sections": {
+    "main": {
+      "type": "ph-terms-of-service"
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

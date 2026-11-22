@@ -1,0 +1,82 @@
+<main>
+  <section class="cart-hero">
+    <img class="ghost" src="{{ 'flower.png' | asset_url }}" alt="" style="--gw:900px;--gx:86%;--gy:-220px;--gr:24deg">
+    <i class="el" data-el="leaf" data-depth=".6" style="--x:80%;--y:170px;--r:30deg;--s:1"></i>
+    <i class="el" data-el="berry" data-depth=".9" style="--x:74%;--y:300px;--s:.4"></i>
+    <div class="wrap settle">
+      <p class="label">Your basket</p>
+      <h1 class="script">gathered for you</h1>
+      <p class="lede">Every jar below can be traced back to the valley it came from.</p>
+    </div>
+  </section>
+  <div class="wrap" id="cart"></div>
+  <section class="section more" id="cart-more" aria-labelledby="cm-title">
+    <div class="wrap">
+      <div class="settle"><p class="label">The collection</p><h2 id="cm-title" class="hd hd-m">Something more <span class="it">from the mountains.</span></h2></div>
+      <div class="field" id="cart-field"></div>
+    </div>
+  </section>
+</main>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  var PH = window.PH, cart = PH.cart, box = document.getElementById('cart');
+  var spots = [['0%', '20px', '-3deg'], ['26%', '160px', '2deg'], ['52%', '0px', '-2deg'], ['76%', '130px', '3deg'], ['10%', '420px', '2deg']];
+  function render() {
+    if (!cart.items.length) {
+      box.innerHTML = '<div class="cart-empty settle in"><h2 class="hd hd-m">Your basket is still <span class="it">in the mountains.</span></h2>' +
+        '<p class="lede" style="margin:18px auto 28px">Pick something rare — saffron at first light, honey left as the bees made it, resin from the rock.</p>' +
+        '<a class="pebble" href="/#collection">Explore the collection</a></div>';
+    } else {
+      var t = cart.totals(), saved = t.compare - t.sub;
+      box.innerHTML = '<div class="cart-body"><ul class="citems">' + cart.items.map(function (it, i) {
+        var m = PH.byVariant(it.id), p = m.p, v = m.v;
+        return '<li class="citem" data-id="' + it.id + '" style="--r:' + (i % 2 ? .8 : -.8) + 'deg;--tx:' + (i % 2 ? 24 : 0) + 'px;--tone-soft:' + p.tones.soft + '">' +
+          '<a class="citem__img" href="' + PH.purl(p) + '"><img src="' + PH.img(p.images[0], 300) + '" alt="' + p.name + '"></a>' +
+          '<div><p class="find__origin">' + p.origin.short + '</p><h3><a href="' + PH.purl(p) + '">' + p.name + '</a></h3><p class="meta">' + v.title + ' · ' + PH.inr(v.price) + ' each</p>' +
+            '<div class="citem__row"><div class="qty" role="group" aria-label="Quantity of ' + p.name + '"><button data-dec aria-label="Fewer">−</button><output aria-live="polite">' + it.qty + '</output><button data-inc aria-label="More">+</button></div>' +
+            '<button class="twig" data-remove>Set it back</button></div></div>' +
+          '<div class="citem__price">' + PH.inr(v.price * it.qty) + (v.compare ? '<s>' + PH.inr(v.compare * it.qty) + '</s>' : '') + '</div>' +
+        '</li>';
+      }).join('') + '</ul>' +
+      '<aside class="summary settle in" aria-label="Order summary"><h2 class="hd hd-m">Summary</h2>' +
+        '<p class="summary__row"><span>Items</span><span>' + cart.count() + '</span></p>' +
+        (saved > 0 ? '<p class="summary__row" style="color:#4D7A3E"><span>You save</span><span>' + PH.inr(saved) + '</span></p>' : '') +
+        '<p class="summary__row total"><span>Subtotal</span><span>' + PH.inr(t.sub) + '</span></p>' +
+        '<a class="pebble pebble--wide" href="' + cart.checkoutUrl() + '">Checkout securely</a>' +
+        '<p class="note">Shipping and taxes are calculated at checkout on purpleherb.in. Lab-tested · Traceable · Zero additives.</p>' +
+      '</aside></div>';
+    }
+    PH.decorate(box); PH.brandify(box);
+    // suggestions: what is not in the basket yet
+    var inCart = cart.items.map(function (i) { return PH.byVariant(i.id).p.slug; });
+    var others = PH.products.filter(function (p) { return inCart.indexOf(p.slug) === -1; }).slice(0, 4);
+    document.getElementById('cart-more').style.display = others.length ? '' : 'none';
+    document.getElementById('cart-field').innerHTML = others.map(function (o, i) {
+      var s = spots[i], v = o.variants[0];
+      return '<div class="find settle in" style="--x:' + s[0] + ';--y:' + s[1] + ';--w:250px;--r:' + s[2] + '">' +
+        '<a href="' + PH.purl(o) + '" aria-label="' + o.name + '"><div class="find__img"><img src="' + PH.img(o.images[0], 600) + '" alt="' + o.name + '" loading="lazy"></div></a>' +
+        '<div class="find__meta"><p class="find__origin">' + o.origin.short + '</p><h3 class="find__name"><a href="' + PH.purl(o) + '">' + o.name + '</a></h3><span class="find__price">' + PH.inr(v.price) + '</span><br>' +
+        '<a class="pebble" href="' + PH.addUrl(v.id, 1) + '" data-add="' + v.id + '">Add to basket</a></div></div>';
+    }).join('');
+    PH.decorate(document.getElementById('cart-field'));
+  }
+  box.addEventListener('click', function (e) {
+    var li = e.target.closest('.citem'); if (!li) return;
+    var id = Number(li.dataset.id), it = cart.items.find(function (x) { return x.id === id; });
+    if (e.target.closest('[data-inc]')) cart.set(id, it.qty + 1);
+    else if (e.target.closest('[data-dec]')) { if (it.qty > 1) cart.set(id, it.qty - 1); }
+    else if (e.target.closest('[data-remove]')) { li.classList.add('leaving'); setTimeout(function () { cart.remove(id); }, 450); }
+  });
+  document.addEventListener('ph:cart', render);
+  render();
+})();
+
+});
+</script>
+
+{% schema %}
+{
+  "name": "Basket"
+}
+{% endschema %}

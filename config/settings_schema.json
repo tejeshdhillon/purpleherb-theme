@@ -1,0 +1,17 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "purpleherb",
+    "theme_version": "1.0.0",
+    "theme_author": "purpleherb",
+    "theme_documentation_url": "https://purpleherb.in",
+    "theme_support_url": "https://purpleherb.in"
+  },
+  {
+    "name": "Checkout & login",
+    "settings": [
+      { "type": "paragraph", "content": "The site uses its own basket. Checkout and login run through your third-party service — see snippets/ph-integrations.liquid." },
+      { "type": "url", "id": "ph_account_url", "label": "Account / login page URL", "info": "Where the account icon in the header goes. Leave empty to hide the icon." }
+    ]
+  }
+]

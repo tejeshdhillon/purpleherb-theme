@@ -1,0 +1,9 @@
+<main>
+  <section class="legal-hero"><div class="wrap settle"><p class="label">{{ article.published_at | date: '%B %d, %Y' }}</p><h1 class="hd hd-l">{{ article.title }}</h1></div></section>
+  <div class="wrap" style="padding-bottom:100px"><article class="legal-content" style="max-width:760px">{{ article.content }}</article></div>
+</main>
+{% schema %}
+{
+  "name": "Article"
+}
+{% endschema %}
