@@ -77,6 +77,7 @@
 {%- case template.name -%}
   {%- when 'index' -%}{{ 'home.js' | asset_url | script_tag }}
   {%- when 'product' -%}{{ 'product.js' | asset_url | script_tag }}
+    {%- if product.handle == 'sea-buckthorn-juice' -%}{{ 'product-story.js' | asset_url | script_tag }}{%- endif -%}
 {%- endcase -%}
 {%- if ph_page == 'legal' -%}{{ 'legal-toc.js' | asset_url | script_tag }}{%- endif -%}
 </body>

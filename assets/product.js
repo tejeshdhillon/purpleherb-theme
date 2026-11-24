@@ -62,6 +62,9 @@
     '</div>' +
   '</section>' +
 
+  // ---------- the scroll story, for products that have one (assets/product-story.js) ----------
+  (p.scrollStory ? '<section id="ph-story"></section>' : '') +
+
   // ---------- the numbers that make it rare (from the brand posts) ----------
   '<section class="section" aria-labelledby="facts-title">' +
     '<div class="wrap facts-wrap">' +
@@ -85,7 +88,8 @@
     '</div></div>' +
   '</section>' : '') +
 
-  // ---------- region ----------
+  // ---------- region and journey (told by the scroll story instead, when there is one) ----------
+  (p.scrollStory ? '' :
   '<section class="p-region" aria-labelledby="region-title">' +
     '<div class="p-region__scene settle"><img src="' + PH.asset('') + p.scene + '" alt="' + p.sceneAlt + '"></div>' +
     '<div class="wrap">' +
@@ -110,7 +114,7 @@
         return '<li class="settle" style="--d:' + (i * .12) + 's"><span class="mark">0' + (i + 1) + '</span><h3>' + r.t + '</h3><p>' + r.d + '</p></li>';
       }).join('') + '</ol></div>' +
     '</div>' +
-  '</section>' +
+  '</section>') +
 
   // ---------- about + ritual of use ----------
   '<section class="section" style="padding-top:0" aria-labelledby="about-title">' +

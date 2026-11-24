@@ -121,6 +121,7 @@ PH.products = [
       ['Antioxidants', 'For digestion, vitality and a steady glow.']
     ],
     journey: ['Thorn to bottle.', 'Nothing lost.'],
+    scrollStory: true,  /* the scroll-told journey: assets/product-story.js */
     description: 'PurpleHerb Sea Buckthorn Pure Pulp is the whole berry, pulped and bottled in glass. Sea buckthorn is naturally rich in vitamin C, carotenoids, healthy fatty acids and plant compounds — valued for supporting immunity, skin, digestion and everyday vitality, and for helping the body meet oxidative stress.',
     story: [
       'In Ladakh, sea buckthorn grows wild in thorny silver-green thickets along the rivers of the cold desert — one of the few shrubs that thrives where summers are short and winters fall far below freezing. Locally it is often called the Leh berry.',
