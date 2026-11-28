@@ -79,5 +79,8 @@
   {%- when 'product' -%}{{ 'product.js' | asset_url | script_tag }}
 {%- endcase -%}
 {%- if ph_page == 'legal' -%}{{ 'legal-toc.js' | asset_url | script_tag }}{%- endif -%}
+
+  {%- comment -%} Razorpay Magic Checkout (added by Razorpay's setup). Keep this line; remove it to switch Magic Checkout off. {%- endcomment -%}
+  {% render 'razorpay-magic-checkout' %}
 </body>
 </html>
