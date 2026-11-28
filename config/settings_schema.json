@@ -10,8 +10,7 @@
   {
     "name": "Checkout & login",
     "settings": [
-      { "type": "paragraph", "content": "Checkout runs on Razorpay Magic Checkout through your own small server (see server/README.md in the repo)." },
-      { "type": "text", "id": "ph_checkout_api", "label": "Checkout server address", "info": "For example https://purpleherb-checkout.vercel.app (no slash at the end). Leave empty to use Shopify's checkout instead." },
+      { "type": "paragraph", "content": "The site uses its own basket. Checkout and login run through your third-party service — see snippets/ph-integrations.liquid." },
       { "type": "url", "id": "ph_account_url", "label": "Account / login page URL", "info": "Where the account icon in the header goes. Leave empty to hide the icon." }
     ]
   }

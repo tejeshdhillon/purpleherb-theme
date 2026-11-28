@@ -1,7 +1,0 @@
-{
-  "name": "purpleherb-checkout",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Tiny server for purpleherb: creates Razorpay Magic Checkout orders and answers its shipping / coupon calls.",
-  "engines": { "node": ">=18" }
-}

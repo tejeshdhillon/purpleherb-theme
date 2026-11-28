@@ -320,76 +320,13 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 4200);
   }
-  /* Checkout and Buy now.
-     With a checkout server set in Theme settings, they open Razorpay Magic Checkout (login, saved
-     addresses, UPI/cards/COD). Without one they fall back to Shopify's standard checkout button. */
+  /* Checkout and Buy now use Shopify's standard checkout button (form action=/cart, name=checkout),
+     the button checkout apps such as Razorpay Magic Checkout listen for. */
   function goCheckout() {
     var btn = document.getElementById('ph-checkout-btn');
     if (btn) btn.click(); else window.location.href = '/checkout';
   }
   PH.goCheckout = goCheckout;
-  function notice(title, msg) {
-    toast.innerHTML = '<p><strong>' + title + '</strong>' + msg + '</p>';
-    toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 6000);
-  }
-  var rzpBusy = false, rzpScript = null;
-  function loadRzp() {
-    if (window.Razorpay) return Promise.resolve();
-    if (!rzpScript) rzpScript = new Promise(function (ok, no) {
-      var s = document.createElement('script'); s.src = 'https://checkout.razorpay.com/v1/magic-checkout.js';
-      s.onload = ok; s.onerror = function () { rzpScript = null; no(new Error('script')); };
-      document.head.appendChild(s);
-    });
-    return rzpScript;
-  }
-  function api(path, payload) {
-    return fetch(PH.integrations.checkoutApi.replace(/\/+$/, '') + '/api/' + path, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); });
-  }
-  function thanks(info) {
-    var o = document.createElement('div'); o.className = 'ph-thanks'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
-    var line = info.unknown
-      ? 'Your payment went through, but we could not confirm it on this screen. You do not need to pay again. We will email and message you shortly, and you can always write to us on WhatsApp.'
-      : info.cod
-        ? 'Your Cash on Delivery order is placed. We will message you with delivery updates.'
-        : 'Your payment is received. A receipt is on its way to your phone and email, and we will message you when it ships.';
-    o.innerHTML = '<div class="ph-thanks__card"><p class="label">Thank you</p><h2>Your order is with us.</h2><p>' + line + '</p>' +
-      (info.receipt ? '<p class="ph-thanks__ref">Order reference · ' + info.receipt + '</p>' : '') +
-      '<a class="pebble pebble--wide" href="/">Back to purpleherb</a></div>';
-    document.body.appendChild(o);
-    document.documentElement.style.overflow = 'hidden';
-  }
-  function checkout(items, clearBasket) {
-    if (!PH.integrations.checkoutApi) { goCheckout(); return; }
-    if (rzpBusy) return;
-    if (!items.length) { notice('Your basket is empty', 'Add something first.'); return; }
-    rzpBusy = true;
-    document.body.classList.add('ph-paying');
-    var done = function () { rzpBusy = false; document.body.classList.remove('ph-paying'); };
-    Promise.all([api('create-order', { items: items }), loadRzp()]).then(function (r) {
-      var o = r[0];
-      if (!o.order_id) { done(); notice('Could not start checkout', o.error || 'Please try again in a moment.'); return; }
-      var rz = new window.Razorpay({
-        key: o.key_id, one_click_checkout: true, order_id: o.order_id,
-        name: 'purpleherb', show_coupons: true,
-        theme: { color: '#45346B' },
-        handler: function (resp) {
-          api('verify', resp).then(function (v) {
-            done();
-            if (clearBasket) fetch('/cart/clear.js', { method: 'POST', headers: { 'Accept': 'application/json' } }).then(function () { cart.refresh(); }).catch(function () {});
-            thanks({ cod: v.cod, receipt: v.receipt || o.receipt, unknown: !v.ok });
-          });
-        },
-        modal: { ondismiss: done }
-      });
-      rz.on('payment.failed', function (f) {
-        notice('Payment did not go through', ((f && f.error && f.error.description) || 'Nothing was charged.') + ' You can try again.');
-      });
-      rz.open();
-    }).catch(function () { done(); notice('Could not start checkout', 'Please check your connection and try again.'); });
-  }
-  PH.checkout = checkout;
   document.addEventListener('click', function (e) {
     var buy = e.target.closest('[data-ph-buy]'), co = e.target.closest('[name="checkout"]'), ac = e.target.closest('[data-ph-account]');
     if (buy) {
@@ -398,16 +335,14 @@
       if (!bm) return;
       if (bm.v.available === false) { soldOut(bm); return; }
       var qty = Number(buy.getAttribute('data-qty') || 1);
-      if (PH.integrations.checkoutApi) { checkout([{ id: bm.v.id, qty: qty }], false); return; }  // this item only; basket untouched
       buy.classList.add('added');
+      // Buy now = this item alone in the basket, then straight to checkout
       var others = cart.items.filter(function (i) { return i.id !== bm.v.id; }).map(function (i) { return i.id; });
       others.forEach(function (id) { cart.remove(id); });
       var it = cart.items.find(function (i) { return i.id === bm.v.id; });
       (it ? cart.set(bm.v.id, qty) : cart.add(bm.v.id, qty)).then(function () { buy.classList.remove('added'); goCheckout(); });
-    } else if (co && PH.integrations.checkoutApi) {
-      e.preventDefault(); e.stopImmediatePropagation();
-      checkout(cart.items.map(function (i) { return { id: i.id, qty: i.qty }; }), true);
     } else if (co && cart.pending > 0) {
+      // let the last basket change reach the store first
       e.preventDefault(); e.stopImmediatePropagation();
       cart.synced().then(function () { co.click(); });
     } else if (ac && !PH.integrations.accountUrl) { e.preventDefault(); PH.integrations.account(ac); }
