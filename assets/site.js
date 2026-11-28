@@ -252,7 +252,7 @@
   /* ------------------------------------------------------------------ *
    * 4. Basket — kept in this browser, checkout on Shopify
    * ------------------------------------------------------------------ */
-  /* Basket = the store's own Shopify cart, so checkout apps (Razorpay Magic Checkout)
+  /* Basket = the store's own Shopify cart, so checkout apps (GoKwik checkout)
      see the same items. The page starts from the cart Shopify printed (PH.initialCart),
      updates instantly, then syncs each change in the background. */
   var cart = {
@@ -321,7 +321,7 @@
     toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 4200);
   }
   /* Checkout and Buy now use Shopify's standard checkout button (form action=/cart, name=checkout),
-     the button checkout apps such as Razorpay Magic Checkout listen for. */
+     the standard button that checkout apps such as GoKwik hook into. */
   function goCheckout() {
     var btn = document.getElementById('ph-checkout-btn');
     if (btn) btn.click(); else window.location.href = '/checkout';
