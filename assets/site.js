@@ -323,7 +323,8 @@
   /* Checkout and Buy now use Shopify's standard checkout button (form action=/cart, name=checkout),
      the standard button that checkout apps such as GoKwik hook into. */
   function goCheckout() {
-    var btn = document.getElementById('ph-checkout-btn');
+    // GoKwik swaps Shopify's checkout button for its own (.gokwik-checkout-button), so press that one first.
+    var btn = document.querySelector('.gokwik-checkout-button') || document.getElementById('ph-checkout-btn') || document.querySelector('button[name="checkout"]');
     if (btn) btn.click(); else window.location.href = '/checkout';
   }
   PH.goCheckout = goCheckout;
